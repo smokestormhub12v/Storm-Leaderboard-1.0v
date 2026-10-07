@@ -1,0 +1,323 @@
+-- Ultimate Animated Mobile Leaderboard for Delta
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+if CoreGui:FindFirstChild("CustomMobileLeaderboard") then
+    CoreGui.CustomMobileLeaderboard:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CustomMobileLeaderboard"
+ScreenGui.Parent = CoreGui
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Sleek Toggle Button (↑ / ↓)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleBtn"
+ToggleBtn.Size = UDim2.new(0, 32, 0, 32)
+ToggleBtn.Position = UDim2.new(1, -42, 0, 6)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+ToggleBtn.BackgroundTransparency = 0.3
+ToggleBtn.Text = "↑"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 15
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleBtn
+
+-- Main Leaderboard Frame (Positioned higher up so bottom buttons are free to click)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 195, 0, 170)
+MainFrame.Position = UDim2.new(1, -205, 0, 42) -- Open position
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 22)
+MainFrame.BackgroundTransparency = 0.45 -- Semi-transparent ("lil bit invisible")
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+-- Scrolling Container for Players
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -6, 1, -6)
+ScrollingFrame.Position = UDim2.new(0, 3, 0, 3)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.ScrollBarThickness = 2
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 3)
+UIListLayout.Parent = ScrollingFrame
+
+-- Full Profile Popup Modal (Like real Roblox leaderboard profile view)
+local ProfilePopup = Instance.new("Frame")
+ProfilePopup.Name = "ProfilePopup"
+ProfilePopup.Size = UDim2.new(0, 220, 0, 220)
+ProfilePopup.Position = UDim2.new(0.5, -110, 0.5, -110)
+ProfilePopup.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+ProfilePopup.BackgroundTransparency = 0.1
+ProfilePopup.Visible = false
+ProfilePopup.ZIndex = 50
+ProfilePopup.Parent = ScreenGui
+
+local PopupCorner = Instance.new("UICorner")
+PopupCorner.CornerRadius = UDim.new(0, 14)
+PopupCorner.Parent = ProfilePopup
+
+local PopupStroke = Instance.new("UIStroke")
+PopupStroke.Color = Color3.fromRGB(70, 130, 255)
+PopupStroke.Thickness = 1.5
+PopupStroke.Parent = ProfilePopup
+
+local AvatarImage = Instance.new("ImageLabel")
+AvatarImage.Size = UDim2.new(0, 65, 0, 65)
+AvatarImage.Position = UDim2.new(0.5, -32.5, 0, 15)
+AvatarImage.BackgroundTransparency = 1
+AvatarImage.ZIndex = 51
+AvatarImage.Parent = ProfilePopup
+
+local AvatarCorner = Instance.new("UICorner")
+AvatarCorner.CornerRadius = UDim.new(1, 0)
+AvatarCorner.Parent = AvatarImage
+
+local DispNameLabel = Instance.new("TextLabel")
+DispNameLabel.Size = UDim2.new(1, -16, 0, 22)
+DispNameLabel.Position = UDim2.new(0, 8, 0, 85)
+DispNameLabel.BackgroundTransparency = 1
+DispNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+DispNameLabel.TextSize = 15
+DispNameLabel.Font = Enum.Font.GothamBold
+DispNameLabel.TextXAlignment = Enum.TextXAlignment.Center
+DispNameLabel.ZIndex = 51
+DispNameLabel.Parent = ProfilePopup
+
+local UsernameLabel = Instance.new("TextLabel")
+UsernameLabel.Size = UDim2.new(1, -16, 0, 18)
+UsernameLabel.Position = UDim2.new(0, 8, 0, 107)
+UsernameLabel.BackgroundTransparency = 1
+UsernameLabel.TextColor3 = Color3.fromRGB(160, 160, 190)
+UsernameLabel.TextSize = 12
+UsernameLabel.Font = Enum.Font.Gotham
+UsernameLabel.TextXAlignment = Enum.TextXAlignment.Center
+UsernameLabel.ZIndex = 51
+UsernameLabel.Parent = ProfilePopup
+
+local PopupDetailsLabel = Instance.new("TextLabel")
+PopupDetailsLabel.Size = UDim2.new(1, -16, 0, 32)
+PopupDetailsLabel.Position = UDim2.new(0, 8, 0, 128)
+PopupDetailsLabel.BackgroundTransparency = 1
+PopupDetailsLabel.TextColor3 = Color3.fromRGB(110, 220, 255)
+PopupDetailsLabel.TextSize = 11
+PopupDetailsLabel.Font = Enum.Font.GothamMedium
+PopupDetailsLabel.TextXAlignment = Enum.TextXAlignment.Center
+PopupDetailsLabel.TextWrapped = true
+PopupDetailsLabel.ZIndex = 51
+PopupDetailsLabel.Parent = ProfilePopup
+
+local ClosePopupBtn = Instance.new("TextButton")
+ClosePopupBtn.Size = UDim2.new(0.75, 0, 0, 28)
+ClosePopupBtn.Position = UDim2.new(0.125, 0, 1, -36)
+ClosePopupBtn.BackgroundColor3 = Color3.fromRGB(45, 50, 75)
+ClosePopupBtn.Text = "Close Profile"
+ClosePopupBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ClosePopupBtn.TextSize = 12
+ClosePopupBtn.Font = Enum.Font.GothamBold
+ClosePopupBtn.ZIndex = 51
+ClosePopupBtn.Parent = ProfilePopup
+
+local ClosePopupCorner = Instance.new("UICorner")
+ClosePopupCorner.CornerRadius = UDim.new(0, 8)
+ClosePopupCorner.Parent = ClosePopupBtn
+
+ClosePopupBtn.MouseButton1Click:Connect(function()
+    ProfilePopup.Visible = false
+end)
+
+-- Smooth Slide Animation for Toggle
+local isOpen = true
+local tweenInfo = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    ToggleBtn.Text = isOpen and "↑" or "↓"
+    
+    -- Slide up off-screen when closing, slide back down when opening
+    local targetPos = isOpen and UDim2.new(1, -205, 0, 42) or UDim2.new(1, -205, 0, -200)
+    local tween = TweenService:Create(MainFrame, tweenInfo, {Position = targetPos})
+    tween:Play()
+end)
+
+-- Helper: Get Player Score
+local function getPlayerScore(player)
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in ipairs(leaderstats:GetChildren()) do
+            if stat:IsA("IntValue") or stat:IsA("NumberValue") then
+                return stat.Value, stat.Name
+            end
+        end
+    end
+    return 0, "Score"
+end
+
+-- Helper: Real Ping with Green (< 150ms) / Red (>= 150ms) Coloring
+local function getPlayerPingData(player)
+    if player == LocalPlayer then
+        local success, pingSec = pcall(function()
+            return player:GetNetworkPing()
+        end)
+        if success and pingSec then
+            local pingMs = math.floor(pingSec * 1000)
+            if pingMs <= 0 then
+                pcall(function()
+                    pingMs = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+                end)
+            end
+            local color = (pingMs < 150) and Color3.fromRGB(80, 255, 120) or Color3.fromRGB(255, 80, 80)
+            return pingMs .. "ms", color
+        end
+    end
+    return "OK", Color3.fromRGB(80, 255, 120)
+end
+
+-- Update Leaderboard UI
+local function updateLeaderboard()
+    for _, child in ipairs(ScrollingFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local players = Players:GetPlayers()
+    
+    table.sort(players, function(a, b)
+        local scoreA = getPlayerScore(a)
+        local scoreB = getPlayerScore(b)
+        return scoreA > scoreB
+    end)
+
+    for _, player in ipairs(players) do
+        local scoreVal, statName = getPlayerScore(player)
+        local pingStr, pingColor = getPlayerPingData(player)
+
+        local Row = Instance.new("TextButton")
+        Row.Size = UDim2.new(1, 0, 0, 26)
+        Row.BackgroundColor3 = (player == LocalPlayer) and Color3.fromRGB(35, 45, 75) or Color3.fromRGB(24, 24, 34)
+        Row.BackgroundTransparency = 0.5
+        Row.AutoButtonColor = true
+        Row.Text = ""
+        Row.Parent = ScrollingFrame
+
+        local RowCorner = Instance.new("UICorner")
+        RowCorner.CornerRadius = UDim.new(0, 6)
+        RowCorner.Parent = Row
+
+        -- Name Label (Super small clean text)
+        local NameLabel = Instance.new("TextLabel")
+        NameLabel.Size = UDim2.new(0.52, 0, 1, 0)
+        NameLabel.Position = UDim2.new(0, 6, 0, 0)
+        NameLabel.BackgroundTransparency = 1
+        NameLabel.Text = player.DisplayName ~= "" and player.DisplayName or player.Name
+        NameLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+        NameLabel.TextSize = 10
+        NameLabel.Font = Enum.Font.GothamMedium
+        NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        NameLabel.Parent = Row
+
+        -- Score Label
+        local ScoreLabel = Instance.new("TextLabel")
+        ScoreLabel.Size = UDim2.new(0.25, 0, 1, 0)
+        ScoreLabel.Position = UDim2.new(0.52, 0, 0, 0)
+        ScoreLabel.BackgroundTransparency = 1
+        ScoreLabel.Text = tostring(scoreVal)
+        ScoreLabel.TextColor3 = Color3.fromRGB(110, 220, 255)
+        ScoreLabel.TextSize = 10
+        ScoreLabel.Font = Enum.Font.GothamBold
+        ScoreLabel.TextXAlignment = Enum.TextXAlignment.Center
+        ScoreLabel.Parent = Row
+
+        -- Ping Label (Green if okay, Red if not)
+        local PingLabel = Instance.new("TextLabel")
+        PingLabel.Size = UDim2.new(0.23, -4, 1, 0)
+        PingLabel.Position = UDim2.new(0.77, 0, 0, 0)
+        PingLabel.BackgroundTransparency = 1
+        PingLabel.Text = pingStr
+        PingLabel.TextColor3 = pingColor
+        PingLabel.TextSize = 10
+        PingLabel.Font = Enum.Font.GothamBold
+        PingLabel.TextXAlignment = Enum.TextXAlignment.Right
+        PingLabel.Parent = Row
+
+        -- Open full profile popup on tap
+        Row.MouseButton1Click:Connect(function()
+            DispNameLabel.Text = player.DisplayName ~= "" and player.DisplayName or player.Name
+            UsernameLabel.Text = "@" .. player.Name
+            PopupDetailsLabel.Text = statName .. ": " .. tostring(scoreVal) .. "  |  Ping: " .. pingStr
+            
+            pcall(function()
+                local thumb = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+                AvatarImage.Image = thumb
+            end)
+            
+            ProfilePopup.Visible = true
+        end)
+    end
+
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #players * 29)
+end
+
+-- Live event synchronization for joining/leaving and scores
+Players.PlayerAdded:Connect(function(player)
+    player.ChildAdded:Connect(function(child)
+        if child.Name == "leaderstats" then
+            child.ChildAdded:Connect(updateLeaderboard)
+            for _, stat in ipairs(child:GetChildren()) do
+                if stat:IsA("ValueBase") then
+                    stat.Changed:Connect(updateLeaderboard)
+                end
+            end
+        end
+        updateLeaderboard()
+    end)
+    updateLeaderboard()
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.wait(0.2)
+    updateLeaderboard()
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        for _, stat in ipairs(leaderstats:GetChildren()) do
+            if stat:IsA("ValueBase") then
+                stat.Changed:Connect(updateLeaderboard)
+            end
+        end
+    end
+end
+
+-- Background refresh loop for live pings and scores
+task.spawn(function()
+    while true do
+        task.wait(2)
+        pcall(updateLeaderboard)
+    end
+end)
+
+-- Initial run
+task.spawn(updateLeaderboard)
+print("Animated Mobile Leaderboard loaded successfully!")
